@@ -21,8 +21,6 @@ int PIDh1(int pitchCommand, int pitchValue, int nowspd);
 
 int PIDh2(int pitchCommand, int pitchValue, int nowspd);
 
-int PIDh2(int pitchCommand, int pitchValue, int nowspd);
-
 int PIDh3(int pitchCommand, int pitchValue, int nowspd);
 
 #endif
