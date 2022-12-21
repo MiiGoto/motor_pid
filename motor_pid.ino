@@ -1,109 +1,70 @@
+#include <MsTimer2.h>
+#include <FlexCAN.h>
 #include "PID.h"
 
-PID pid0;
-PID pid1;
-PID pid2;
-PID pid3;
+typedef struct
+{
+  int16_t rotation;
+  int16_t denryu;
+} wheelEscDataSt;
 
-void setup() {
-  pinMode(13, OUTPUT);
-  //  ele();
-  pid0.init(4.7, 0.06, 0);
-  pid1.init(3.4, 0.04, 0);
-  pid2.init(6.2, 0.05, 0);
-  pid3.init(0, 0, 0);
+FlexCAN CANTransmitter(1000000);
+static CAN_message_t rxmsg;//can受信用buf
+CAN_message_t msg;//can送信用buf
+wheelEscDataSt wEscData[4];//can受信用
+
+Pid pid0;
+Pid pid1;
+Pid pid2;
+Pid pid3;
+
+void setup(void)
+{
+  CANTransmitter.begin();
   Serial.begin(115200);
-  Serial1.begin(100000, SERIAL_8E1);
-}
+  delay(1000);
 
-void loop() {
-  int u[4] = {};
-  msg.id = 0x200;
   msg.len = 8;
-  for (int i = 0; i < 4; i++) {
-    u[i] = 0;
+  msg.id = 0x200;
+  for ( int idx = 0; idx < msg.len; ++idx ) {
+    msg.buf[idx] = 0;
   }
-  if (((data[5] & 0xC0) >> 6) == 1) {
-    if (millis() - tim < 500) {
-      for (int i = 0; i < 4; i++) {
-        u[i] = 0;
-      }
-      //      u[0] = (millis() - tim) * 4;
-      //      u[1] = (millis() - tim) * 4;
-      //      u[2] = (millis() - tim) * 4;
-    }
-    else if (millis() - tim < 5500) {
-      float vx, vy, vt;
-      //      u[0] = 2000;
-      //      u[1] = 2000;
-      //      u[2] = 2000;
-      vx = 0;//目標最大rpmは5000
-      vy = 200;
-      vt = 0;
-      u[0] = (int)((vy + vt) / 0.27557830294);
-      u[1] = (int)((sin120 * vx - 0.5 * vy + vt) / 0.27557830294);
-      u[2] = (int)((-sin120 * vx - 0.5 * vy + vt) / 0.27557830294);
-    }
-    else if (millis() - tim < 2000) {
-      for (int i = 0; i < 4; i++) {
-        u[i] = 0;
-      }
-      //      u[0] = 8000 - (millis() - tim) * 4;
-      //      u[1] = 8000 - (millis() - tim) * 4;
-      //      u[2] = 8000 - (millis() - tim) * 4;
-    }
-    else {
-      u[0] = 0;
-      u[1] = 0;
-      u[2] = 0;
-    }
-  }
-  else if (((data[5] & 0xC0) >> 6) == 2) {
-    tim = millis();
-    u[0] = 0;
-    u[1] = 0;
-    u[2] = 0;
-  }
-  else if (((data[5] & 0xC0) >> 6) == 3) {
-    tim = millis();
-    float vx, vy, vt;
-    vx = map(testch[3], 364, 1684, -5000, 5000);//目標最大rpmは5000
-    vy = map(testch[2], 364, 1684, -5000, 5000);
-    vt = map(testch[0] - 6, 364, 1684, -2500, 2500);
-    u[0] = (int)((vy + vt) / 0.27557830294);
-    u[1] = (int)((sin120 * vx - 0.5 * vy + vt) / 0.27557830294);
-    u[2] = (int)((-sin120 * vx - 0.5 * vy + vt) / 0.27557830294);
-    //    u[0] = map(testch[3], 364, 1684, -1000, 1000);//目標最大rpmは5000
-    //    u[1] = map(testch[0], 364, 1684, -1000, 1000) - 12;
-    //    u[2] = map(testch[2], 364, 1684, -1000, 1000);
-    Serial.print(vx);
-    Serial.print(",");
-    Serial.print(vy);
-    Serial.print(",");
-    Serial.print(vt);
-    Serial.print(",");
-    Serial.print(pid0.debug());
-    Serial.print(",");
-    Serial.print(pid1.debug());
-    Serial.print(",");
-    Serial.print(pid2.debug());
-    Serial.println("");
-  }
-  //  Serial.print(u[1]);
+
+  pid0.init(0, 0, 0); //p,i,dの順に指定できる
+  pid1.init(0, 0, 0);
+  pid2.init(0, 0, 0);
+  pid3.init(0, 0, 0);
+
+  MsTimer2::set(2, timerInt);
+  MsTimer2::start();
+
+}
+int cnt=0;
+
+void loop(void)
+{
+  int u[4] = {0};
+  u[0] = 500; //ここの数字はrpm指定、-5000~5000くらい
+  
+  Serial.print(u[0]);//目標速度
+  Serial.print(",");
+  
   u[0] = pid0.pid_out(u[0]);
-  u[1] = pid1.pid_out(u[1]);
-  u[2] = pid2.pid_out(u[2]);
-  for (int i = 0; i < msg.len; i++) {
+
+  for (int i = 0; i < 4; i++) {
     msg.buf[i * 2] = u[i] >> 8;
     msg.buf[i * 2 + 1] = u[i] & 0xFF;
   }
-  for (int i = 0; i < 4; i++)u[i] = 0;
-  //  Serial.print(",");
-  //  Serial.print(pid0.debug());
-  //  Serial.print(",");
-  //  Serial.print(pid1.debug());
-  //  Serial.print(",");
-  //  Serial.print(pid2.debug());
-  //  Serial.println("");
+  Serial.print(pid0.debug());//現在速度
+  Serial.println("");
   delay(10);
+}
+
+void timerInt() {
+  while ( CANTransmitter.read(rxmsg) ) {
+    if (rxmsg.id == 0x201) {
+      pid0.now_value(rxmsg.buf[2] * 256 + rxmsg.buf[3]);
+    }
+  }
+  CANTransmitter.write(msg);
 }
