@@ -44,13 +44,19 @@ int cnt=0;
 void loop(void)
 {
   int u[4] = {0};
-  u[0] = 500; //ここの数字はrpm指定、-5000~5000くらい
+  u[0] = 500;
+  u[1] = 500;
+  u[2] = 500;
+  u[3] = 500; //ここの数字はrpm指定、-5000~5000くらい
   
   Serial.print(u[0]);//目標速度
   Serial.print(",");
   
   u[0] = pid0.pid_out(u[0]);
-
+  u[1] = pid1.pid_out(u[1]);  
+  u[2] = pid0.pid_out(u[2]);
+  u[3] = pid0.pid_out(u[3]);
+  
   for (int i = 0; i < 4; i++) {
     msg.buf[i * 2] = u[i] >> 8;
     msg.buf[i * 2 + 1] = u[i] & 0xFF;
@@ -65,6 +71,16 @@ void timerInt() {
     if (rxmsg.id == 0x201) {
       pid0.now_value(rxmsg.buf[2] * 256 + rxmsg.buf[3]);
     }
-  }
+        
+    if (rxmsg.id == 0x202) {
+      pid1.now_value(rxmsg.buf[2] * 256 + rxmsg.buf[3]);
+    } 
+    if (rxmsg.id == 0x203) {
+      pid2.now_value(rxmsg.buf[2] * 256 + rxmsg.buf[3]);
+    }
+    if (rxmsg.id == 0x204) {
+      pid3.now_value(rxmsg.buf[2] * 256 + rxmsg.buf[3]);
+    }
+     }
   CANTransmitter.write(msg);
 }
