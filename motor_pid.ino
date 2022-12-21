@@ -54,8 +54,8 @@ void loop(void)
   
   u[0] = pid0.pid_out(u[0]);
   u[1] = pid1.pid_out(u[1]);  
-  u[2] = pid0.pid_out(u[2]);
-  u[3] = pid0.pid_out(u[3]);
+  u[2] = pid2.pid_out(u[2]);
+  u[3] = pid3.pid_out(u[3]);
   
   for (int i = 0; i < 4; i++) {
     msg.buf[i * 2] = u[i] >> 8;
@@ -70,8 +70,7 @@ void timerInt() {
   while ( CANTransmitter.read(rxmsg) ) {
     if (rxmsg.id == 0x201) {
       pid0.now_value(rxmsg.buf[2] * 256 + rxmsg.buf[3]);
-    }
-        
+    }    
     if (rxmsg.id == 0x202) {
       pid1.now_value(rxmsg.buf[2] * 256 + rxmsg.buf[3]);
     } 
