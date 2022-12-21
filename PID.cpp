@@ -1,77 +1,39 @@
-#include "Arduino.h"
-#include "PID.h"
+#include "pid.h"
+#include <Arduino.h>
 
-
-//PID
-int PIDh0(int pitchCommand, int pitchValue, int nowspd) {
-  const float pgain[3] = {0.8, 0, 5};
-  static float pIe, prepPe;
-  float pPe = pitchCommand - pitchValue;
-  pIe += pPe;
-  float pDe = pPe - prepPe;
-  prepPe = pPe;
-  if (pitchCommand == 0 || pitchValue == 0) {
-    pPe = 0;
-    pIe = 0;
-    pDe = 0;
-  }
-  if (!(nowspd > 0)) {
-    pIe = 0.01;
-  }
-  return pgain[0] * pPe + pgain[1] * pIe + pgain[2] * pDe;
+Pid::Pid() {
+  for (int i = 0; i < 3; i++)gain[i] = 0;
+  in = 0;
+  pre = 0;
+  dif = 0;
+  last_measure = 0;
+  measure_tim=0;
 }
 
-int PIDh1(int pitchCommand, int pitchValue, int nowspd) {
-  const float pgain[3] = {0.8, 0, 5};
-  static float pIe, prepPe;
-  float pPe = pitchCommand - pitchValue;
-  pIe += pPe;
-  float pDe = pPe - prepPe;
-  prepPe = pPe;
-  if (pitchCommand == 0 || pitchValue == 0) {
-    pPe = 0;
-    pIe = 0;
-    pDe = 0;
-  }
-  if (!(nowspd > 0)) {
-    pIe = 0.01;
-  }
-  return pgain[0] * pPe + pgain[1] * pIe + pgain[2] * pDe;
+void Pid::init(float p_gain, float i_gain, float d_gain) {
+  gain[0] = p_gain;
+  gain[1] = i_gain;
+  gain[2] = d_gain;
 }
 
-int PIDh2(int pitchCommand, int pitchValue, int nowspd) {
-  const float pgain[3] = {0.8, 0, 5};
-  static float pIe, prepPe;
-  float pPe = pitchCommand - pitchValue;
-  pIe += pPe;
-  float pDe = pPe - prepPe;
-  prepPe = pPe;
-  if (pitchCommand == 0 || pitchValue == 0) {
-    pPe = 0;
-    pIe = 0;
-    pDe = 0;
-  }
-  if (!(nowspd > 0)) {
-    pIe = 0.01;
-  }
-  return pgain[0] * pPe + pgain[1] * pIe + pgain[2] * pDe;
+void Pid::now_value(int measure) {
+  if(measure>32767)measure=measure-65535;
+  last_measure = measure;
+  pre_measure[measure_tim%10]=measure;
+  measure_tim++;
 }
 
-int PIDh3(int pitchCommand, int pitchValue, int nowspd) {
-   const float pgain[3] = {0.8, 0, 5};
-   static float pIe, prepPe;
-   float pPe = pitchCommand - pitchValue;
-   pIe += pPe;
-   float pDe = pPe - prepPe;
-   prepPe = pPe;
-   if (pitchCommand == 0 || pitchValue == 0) {
-     pPe = 0;
-     pIe = 0;
-     pDe = 0;
-   }
-   if (!(nowspd > 0)) {
-     pIe = 0.01;
-   }
-   return pgain[0] * pPe + pgain[1] * pIe + pgain[2] * pDe;
- }
- 
+int Pid::pid_out(int target) {
+  pre = in;
+  in = last_measure;
+  dif += target - last_measure;
+  return (int)(gain[0] * (target - in) + gain[1] * dif  + gain[2] * (in - pre));
+}
+
+int Pid::debug(){
+  int remeasure=0;
+  for(int i=0;i<10;i++){
+    remeasure=remeasure+pre_measure[i];
+  }
+  return remeasure/10;
+}
