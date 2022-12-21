@@ -30,10 +30,10 @@ void setup(void)
     msg.buf[idx] = 0;
   }
 
-  pid0.init(3.0, 0.001, 0.003); //p,i,dの順に指定できる
-  pid1.init(3.0, 0.001, 0.003);
-  pid2.init(3.0, 0.001, 0.003);
-  pid3.init(3.0, 0.001, 0.003);
+  pid0.init(3.0, 0.001, 0.03); //p,i,dの順に指定できる
+  pid1.init(3.0, 0.001, 0.03);
+  pid2.init(3.0, 0.001, 0.03);
+  pid3.init(3.0, 0.001, 0.03);
 
   MsTimer2::set(2, timerInt);
   MsTimer2::start();
@@ -81,16 +81,16 @@ void loop(void)
 void timerInt() {
   while ( CANTransmitter.read(rxmsg) ) {
     if (rxmsg.id == 0x201) {
-      pid0.now_value(rxmsg.buf[2] * 256 + rxmsg.buf[3]);
+      pid0.now_value(rxmsg.buf[0] * 256 + rxmsg.buf[1]);
     }    
     if (rxmsg.id == 0x202) {
       pid1.now_value(rxmsg.buf[2] * 256 + rxmsg.buf[3]);
     } 
     if (rxmsg.id == 0x203) {
-      pid2.now_value(rxmsg.buf[2] * 256 + rxmsg.buf[3]);
+      pid2.now_value(rxmsg.buf[4] * 256 + rxmsg.buf[5]);
     }
     if (rxmsg.id == 0x204) {
-      pid3.now_value(rxmsg.buf[2] * 256 + rxmsg.buf[3]);
+      pid3.now_value(rxmsg.buf[6] * 256 + rxmsg.buf[7]);
     }
      }
   CANTransmitter.write(msg);
