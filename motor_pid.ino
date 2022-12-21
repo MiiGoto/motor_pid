@@ -30,10 +30,10 @@ void setup(void)
     msg.buf[idx] = 0;
   }
 
-  pid0.init(0, 0, 0); //p,i,dの順に指定できる
-  pid1.init(0, 0, 0);
-  pid2.init(0, 0, 0);
-  pid3.init(0, 0, 0);
+  pid0.init(3.0, 0.001, 0.003); //p,i,dの順に指定できる
+  pid1.init(3.0, 0.001, 0.003);
+  pid2.init(3.0, 0.001, 0.003);
+  pid3.init(3.0, 0.001, 0.003);
 
   MsTimer2::set(2, timerInt);
   MsTimer2::start();
@@ -51,7 +51,13 @@ void loop(void)
   
   Serial.print(u[0]);//目標速度
   Serial.print(",");
-  
+  Serial.print(u[1]);
+  Serial.print(",");
+  Serial.print(u[2]);
+  Serial.print(",");
+  Serial.print(u[3]);
+  Serial.print(",");
+
   u[0] = pid0.pid_out(u[0]);
   u[1] = pid1.pid_out(u[1]);  
   u[2] = pid2.pid_out(u[2]);
@@ -62,6 +68,12 @@ void loop(void)
     msg.buf[i * 2 + 1] = u[i] & 0xFF;
   }
   Serial.print(pid0.debug());//現在速度
+  Serial.println("");
+  Serial.print(pid1.debug());
+  Serial.println("");
+  Serial.print(pid2.debug());  
+  Serial.println("");
+  Serial.print(pid3.debug());
   Serial.println("");
   delay(10);
 }
