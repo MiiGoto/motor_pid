@@ -81,16 +81,16 @@ void loop(void)
 void timerInt() {
   while ( CANTransmitter.read(rxmsg) ) {
     if (rxmsg.id == 0x201) {
-      pid0.now_value(rxmsg.buf[0] * 256 + rxmsg.buf[1]);
+      pid0.now_value(rxmsg.buf[2] * 256 + rxmsg.buf[3]);
     }    
     if (rxmsg.id == 0x202) {
       pid1.now_value(rxmsg.buf[2] * 256 + rxmsg.buf[3]);
     } 
     if (rxmsg.id == 0x203) {
-      pid2.now_value(rxmsg.buf[4] * 256 + rxmsg.buf[5]);
+      pid2.now_value(rxmsg.buf[2] * 256 + rxmsg.buf[3]);
     }
     if (rxmsg.id == 0x204) {
-      pid3.now_value(rxmsg.buf[6] * 256 + rxmsg.buf[7]);
+      pid3.now_value(rxmsg.buf[2] * 256 + rxmsg.buf[3]);
     }
      }
   CANTransmitter.write(msg);
